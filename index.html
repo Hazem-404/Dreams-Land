@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="logo.png">
   <title>Dreams Land</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -51,7 +51,10 @@
           <p class="text-[10px] text-blue-600 font-black uppercase tracking-widest" id="user-role">...</p>
         </div>
       </div>
-      <button onclick="app.logout()" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition btn-press"><i class="fas fa-power-off"></i></button>
+      <div class="flex gap-2">
+        <button onclick="app.nav('change-pass')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition btn-press"><i class="fas fa-key"></i></button>
+        <button onclick="app.logout()" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition btn-press"><i class="fas fa-power-off"></i></button>
+      </div>
     </header>
 
     <div class="p-4 space-y-6">
@@ -102,6 +105,15 @@
         </div>
       </div>
 
+      <div id="view-change-pass" class="view-section space-y-4">
+        <div class="flex items-center justify-between mb-2"><h3 class="font-black text-xl">تغيير كلمة السر</h3><button onclick="app.backToMain()" class="px-4 py-1.5 bg-slate-200 rounded-xl text-xs font-bold btn-press">عودة</button></div>
+        <div class="glass p-6 space-y-4">
+          <input type="password" id="new-pass" placeholder="كلمة السر الجديدة" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-center outline-none shadow-inner">
+          <input type="password" id="confirm-pass" placeholder="تأكيد كلمة السر" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-center outline-none shadow-inner">
+          <button onclick="app.changePassword()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold btn-press shadow-xl">تحديث الآن</button>
+        </div>
+      </div>
+
       <div id="view-reports" class="view-section space-y-4">
         <div class="flex items-center justify-between mb-2"><h3 class="font-black text-xl">تقرير الرواتب</h3><button onclick="app.nav('admin')" class="px-4 py-1.5 bg-slate-200 rounded-xl text-xs font-bold btn-press">عودة</button></div>
         <div class="glass p-5 space-y-3">
@@ -123,8 +135,7 @@
           <div class="flex items-center justify-center gap-1"><h1 id="emp-net" class="text-6xl font-black mb-1 font-mono tracking-tighter">0</h1><span class="text-sm font-bold opacity-60">ج.م</span></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3" id="emp-stats-grid">
-           </div>
+        <div class="grid grid-cols-2 gap-3" id="emp-stats-grid"></div>
 
         <div class="glass p-6 border-r-4 border-r-blue-600">
           <h4 class="font-black text-sm mb-3 text-slate-700 border-b pb-2 flex items-center gap-2"><i class="fas fa-comment-dots text-blue-600"></i> ملاحظات الإدارة والتفاصيل</h4>
@@ -175,7 +186,27 @@
           this.loadReports();
         }
       },
+      backToMain: function() {
+        this.user.role === 'Admin' ? this.nav('admin') : this.nav('employee');
+      },
       logout: function() { localStorage.removeItem('dreams_u'); location.reload(); },
+      
+      changePassword: async function() {
+        const pass = document.getElementById('new-pass').value;
+        const confirm = document.getElementById('confirm-pass').value;
+        if(!pass || pass !== confirm) return Swal.fire('خطأ', 'كلمات السر غير متطابقة', 'warning');
+        
+        const res = await this.api('changePassword', { empId: this.user.id, newPass: pass });
+        if(res.success) {
+          Swal.fire('تم', 'تم تغيير كلمة السر بنجاح', 'success');
+          document.getElementById('new-pass').value = '';
+          document.getElementById('confirm-pass').value = '';
+          this.backToMain();
+        } else {
+          Swal.fire('خطأ', res.message, 'error');
+        }
+      },
+
       loadAdminDash: async function() {
         const res = await this.api('getAdminDashboard');
         if(res.success) {
@@ -192,7 +223,7 @@
             <span class="font-black text-sm text-slate-700">${e.name}</span>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" class="att-check sr-only peer" data-id="${e.id}" data-name="${e.name}">
-              <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+              <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
             </label>
           </div>`).join('');
       },
@@ -254,10 +285,10 @@
             { label: 'المرتب الشهري', val: d.basic, color: 'text-slate-700' },
             { label: 'أيام الحضور', val: d.pres, color: 'text-green-600' },
             { label: 'أيام الغياب', val: d.abs, color: 'text-red-500' },
-            { label: 'السلف', val: d.loans, color: 'text-orange-600' },
-            { label: 'الوجبات', val: d.meals, color: 'text-orange-400' },
-            { label: 'المكافآت', val: d.bonus, color: 'text-blue-600' },
-            { label: 'الإضافي', val: d.extraBonus, color: 'text-blue-800' },
+            { label: 'إجمالي السلف', val: d.loans, color: 'text-orange-600' },
+            { label: 'إجمالي الوجبات', val: d.meals, color: 'text-orange-400' },
+            { label: 'إجمالي المكافآت', val: d.bonus, color: 'text-blue-600' },
+            { label: 'إجمالي الإضافي', val: d.extraBonus, color: 'text-blue-800' },
             { label: 'خصم غياب زائد', val: d.absPenalty, color: 'text-red-800' },
             { label: 'جزاءات أخرى', val: d.penalties, color: 'text-red-600' }
           ];
